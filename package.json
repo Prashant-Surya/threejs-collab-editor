@@ -1,0 +1,29 @@
+{
+  "name": "editor",
+  "version": "1.0.0",
+  "description": "Draco is an open-source library for compressing and decompressing 3D geometric meshes and point clouds. It is intended to improve the storage and transmission of 3D graphics.",
+  "main": "draco_decoder.js",
+  "directories": {
+    "doc": "docs",
+    "example": "examples"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "webpack-dev-server --open"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "webpack": "^5.88.2",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^4.15.1"
+  },
+  "dependencies": {
+    "@ably/spaces": "^0.1.2",
+    "ably": "^1.2.44",
+    "nanoid": "^5.0.1",
+    "query-string": "^8.1.0"
+  }
+}
