@@ -1,4 +1,5 @@
 function StorageIndexDB() {
+  //   const indexedDB = undefined;
   const indexedDB =
     window.indexedDB ||
     window.mozIndexedDB ||
@@ -8,10 +9,18 @@ function StorageIndexDB() {
   if (indexedDB === undefined) {
     console.warn("Storage: IndexedDB not available.");
     return {
-      init: function () {},
-      get: function () {},
-      set: function () {},
-      clear: function () {},
+      init: function (callback) {
+        callback();
+      },
+      get: function (callback) {
+        callback();
+      },
+      set: function (callback) {
+        callback();
+      },
+      clear: function (callback) {
+        callback();
+      },
     };
   }
 

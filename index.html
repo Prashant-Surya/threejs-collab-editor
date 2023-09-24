@@ -23,6 +23,8 @@
   <body>
     <link rel="stylesheet" href="css/main.css" />
 
+    <script src="dist/bundle.js"></script>
+
     <script src="../examples/jsm/libs/draco/draco_encoder.js"></script>
 
     <link rel="stylesheet" href="js/libs/codemirror/codemirror.css" />
@@ -62,8 +64,6 @@
     <!-- Remove this when import maps will be widely supported -->
     <script async src="js/libs/es-module-shims.js"></script>
 
-    <script src="dist/bundle.js"></script>
-
     <script type="importmap">
       {
         "imports": {
@@ -73,7 +73,7 @@
       }
     </script>
 
-    <script type="module" defer>
+    <script type="module">
       import * as THREE from "three";
 
       import { Editor } from "./js/Editor.js";
@@ -85,6 +85,7 @@
       import { Menubar } from "./js/Menubar.js";
       import { Resizer } from "./js/Resizer.js";
       import { VRButton } from "three/addons/webxr/VRButton.js";
+      import { UpdateEditorFromEvents } from "./js/RealtimeOps.js";
 
       window.URL = window.URL || window.webkitURL;
       window.BlobBuilder =
@@ -101,10 +102,10 @@
       window.VRButton = VRButton; // Expose VRButton to APP Scripts
 
       function membersChangeHandler() {
+        console.log("Subscription started");
         window.currentSpace.members.getAll().then((members) => {
           window.currentSpace.members.getSelf().then((currentUser) => {
             let element = "";
-            console.log("Members available", members);
             for (const member of members) {
               if (member.isConnected) {
                 let name = member.profileData.userName;
@@ -120,9 +121,13 @@
       }
 
       function subscription() {
-        window.realtimeChannel.subscribe((message) => {
+        window.realtimeChannel.subscribe("data_change", (message) => {
           console.log("Received event", message);
-          editor.fromJSON(JSON.parse(message.data));
+          if (message.clientId === window.currentUser.clientId) {
+            console.log("ignoring event from same user");
+            return;
+          }
+          UpdateEditorFromEvents(editor, message.data);
         });
       }
 
@@ -177,7 +182,20 @@
 
         let timeout;
 
-        function saveState() {
+        function saveState(params) {
+          if (params?.type === "AddObjectCommand") {
+            window.realtimeChannel.publish("data_change", {
+              operation: params.type,
+              object: params.object,
+            });
+          } else if (params?.type === "SetPositionCommand") {
+            window.realtimeChannel.publish("data_change", {
+              operation: params.type,
+              objectId: params.object.uuid,
+              newPosition: params.newPosition,
+            });
+          }
+
           if (editor.config.getKey("autosave") === false) {
             return;
           }
@@ -187,11 +205,6 @@
             editor.signals.savingStarted.dispatch();
 
             timeout = setTimeout(function () {
-              console.log("Editor state", editor.toJSON());
-              window.realtimeChannel.publish(
-                "data_change",
-                JSON.stringify(editor.toJSON())
-              );
               editor.storage.set(editor.toJSON());
 
               editor.signals.savingFinished.dispatch();
@@ -203,6 +216,9 @@
 
         signals.geometryChanged.add(saveState);
         signals.objectAdded.add(saveState);
+        signals.objectAdded.add(() => {
+          console.log("Test handler");
+        });
         signals.objectChanged.add(saveState);
         signals.objectRemoved.add(saveState);
         signals.materialChanged.add(saveState);

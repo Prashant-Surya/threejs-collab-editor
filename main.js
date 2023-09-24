@@ -28,10 +28,15 @@ const spaces = new Spaces(client);
 
 const currentSpace = await spaces.get(spaceName);
 
-currentSpace.enter({
+await currentSpace.enter({
   userName: getMemberName(),
 });
+
+const currentUser = await currentSpace.members.getSelf();
 
 window.currentSpace = currentSpace;
 window.spacesClient = spaces;
 window.realtimeChannel = channel;
+window.currentUser = currentUser;
+
+console.log("Main loading complete");

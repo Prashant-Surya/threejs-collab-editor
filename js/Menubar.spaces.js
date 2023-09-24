@@ -1,4 +1,4 @@
-import { UIPanel, UIRow, UIHorizontalRule } from "./libs/ui.js";
+import { UIPanel, UIRow } from "./libs/ui.js";
 
 function MenubarSpaces(editor) {
   const strings = editor.strings;

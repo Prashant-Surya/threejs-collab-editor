@@ -150,8 +150,6 @@ Editor.prototype = {
     this.signals.sceneGraphChanged.dispatch();
   },
 
-  //
-
   addObject: function (object, parent, index) {
     var scope = this;
 
