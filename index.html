@@ -19,6 +19,14 @@
       href="../files/favicon.ico"
       media="(prefers-color-scheme: light)"
     />
+    <style>
+      .centered-div {
+        display: flex;
+        justify-content: center; /* Center horizontally */
+        align-items: center; /* Center vertically */
+        height: 100vh; /* Adjust the height as needed */
+      }
+    </style>
   </head>
   <body>
     <link rel="stylesheet" href="css/main.css" />
@@ -87,205 +95,220 @@
       import { VRButton } from "three/addons/webxr/VRButton.js";
       import { UpdateEditorFromEvents } from "./js/RealtimeOps.js";
 
-      window.URL = window.URL || window.webkitURL;
-      window.BlobBuilder =
-        window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder;
+      setTimeout(() => {
+        // Giving timeout for all libraries to load properly
+        load();
+      }, 2000);
 
-      Number.prototype.format = function () {
-        return this.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
-      };
+      function load() {
+        window.URL = window.URL || window.webkitURL;
+        window.BlobBuilder =
+          window.BlobBuilder ||
+          window.WebKitBlobBuilder ||
+          window.MozBlobBuilder;
 
-      const editor = new Editor();
+        Number.prototype.format = function () {
+          return this.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
+        };
 
-      window.editor = editor; // Expose editor to Console
-      window.THREE = THREE; // Expose THREE to APP Scripts and Console
-      window.VRButton = VRButton; // Expose VRButton to APP Scripts
+        const editor = new Editor();
 
-      function membersChangeHandler() {
-        console.log("Subscription started");
-        window.currentSpace.members.getAll().then((members) => {
-          window.currentSpace.members.getSelf().then((currentUser) => {
-            let element = "";
-            for (const member of members) {
-              if (member.isConnected) {
-                let name = member.profileData.userName;
-                if (member.clientId === currentUser.clientId) {
-                  name += " (You)";
+        window.editor = editor; // Expose editor to Console
+        window.THREE = THREE; // Expose THREE to APP Scripts and Console
+        window.VRButton = VRButton; // Expose VRButton to APP Scripts
+
+        function membersChangeHandler() {
+          console.log("Subscription started");
+          window.currentSpace.members.getAll().then((members) => {
+            window.currentSpace.members.getSelf().then((currentUser) => {
+              let element = "";
+              for (const member of members) {
+                if (member.isConnected) {
+                  let name = member.profileData.userName;
+                  if (member.clientId === currentUser.clientId) {
+                    name += " (You)";
+                  }
+                  element += `<div class="option">${name}</div>`;
                 }
-                element += `<div class="option">${name}</div>`;
               }
-            }
-            $("#space-members").html(element);
+              $("#space-members").html(element);
+            });
           });
-        });
-      }
+        }
 
-      function subscription() {
-        window.realtimeChannel.subscribe("data_change", (message) => {
-          console.log("Received event", message);
-          if (message.clientId === window.currentUser.clientId) {
-            console.log("ignoring event from same user");
-            return;
-          }
-          UpdateEditorFromEvents(editor, message.data);
-        });
-      }
+        function subscription() {
+          window.realtimeChannel.subscribe("data_change", (message) => {
+            console.log("Received event", message);
+            if (message.clientId === window.currentUser.clientId) {
+              console.log("ignoring event from same user");
+              return;
+            }
+            UpdateEditorFromEvents(editor, message.data);
+          });
+        }
 
-      $(document).ready(() => {
-        membersChangeHandler();
-        window.currentSpace.members.subscribe((memberUpdate) => {
-          console.log("Member update triggered", memberUpdate);
+        $(document).ready(() => {
           membersChangeHandler();
-        });
-        subscription();
-      });
-
-      $(window).bind("beforeunload", function () {
-        window.currentSpace.leave();
-      });
-
-      const viewport = new Viewport(editor);
-      document.body.appendChild(viewport.dom);
-
-      const toolbar = new Toolbar(editor);
-      document.body.appendChild(toolbar.dom);
-
-      const script = new Script(editor);
-      document.body.appendChild(script.dom);
-
-      const player = new Player(editor);
-      document.body.appendChild(player.dom);
-
-      const sidebar = new Sidebar(editor);
-      document.body.appendChild(sidebar.dom);
-
-      const menubar = new Menubar(editor);
-      document.body.appendChild(menubar.dom);
-
-      const resizer = new Resizer(editor);
-      document.body.appendChild(resizer.dom);
-
-      editor.storage.init(function () {
-        editor.storage.get(function (state) {
-          if (isLoadingFromHash) return;
-
-          if (state !== undefined) {
-            editor.fromJSON(state);
-          }
-
-          const selected = editor.config.getKey("selected");
-
-          if (selected !== undefined) {
-            editor.selectByUuid(selected);
-          }
+          window.currentSpace.members.subscribe((memberUpdate) => {
+            console.log("Member update triggered", memberUpdate);
+            membersChangeHandler();
+          });
+          subscription();
         });
 
-        let timeout;
+        $(window).bind("beforeunload", function () {
+          window.currentSpace.leave();
+        });
 
-        function saveState(params) {
-          if (params?.type === "AddObjectCommand") {
-            window.realtimeChannel.publish("data_change", {
-              operation: params.type,
-              object: params.object,
-            });
-          } else if (params?.type === "SetPositionCommand") {
-            window.realtimeChannel.publish("data_change", {
-              operation: params.type,
-              objectId: params.object.uuid,
-              newPosition: params.newPosition,
-            });
-          }
+        const viewport = new Viewport(editor);
+        document.body.appendChild(viewport.dom);
 
-          if (editor.config.getKey("autosave") === false) {
-            return;
-          }
-          clearTimeout(timeout);
+        const toolbar = new Toolbar(editor);
+        document.body.appendChild(toolbar.dom);
 
-          timeout = setTimeout(function () {
-            editor.signals.savingStarted.dispatch();
+        const script = new Script(editor);
+        document.body.appendChild(script.dom);
+
+        const player = new Player(editor);
+        document.body.appendChild(player.dom);
+
+        const sidebar = new Sidebar(editor);
+        document.body.appendChild(sidebar.dom);
+
+        const menubar = new Menubar(editor);
+        document.body.appendChild(menubar.dom);
+
+        const resizer = new Resizer(editor);
+        document.body.appendChild(resizer.dom);
+
+        editor.storage.init(function () {
+          editor.storage.get(function (state) {
+            if (isLoadingFromHash) return;
+
+            if (state !== undefined) {
+              editor.fromJSON(state);
+            }
+
+            const selected = editor.config.getKey("selected");
+
+            if (selected !== undefined) {
+              editor.selectByUuid(selected);
+            }
+          });
+
+          let timeout;
+
+          function saveState(params) {
+            if (params?.type === "AddObjectCommand") {
+              window.realtimeChannel.publish("data_change", {
+                operation: params.type,
+                object: params.object,
+              });
+            } else if (params?.type === "SetPositionCommand") {
+              window.realtimeChannel.publish("data_change", {
+                operation: params.type,
+                objectId: params.object.uuid,
+                newPosition: params.newPosition,
+              });
+            }
+
+            if (editor.config.getKey("autosave") === false) {
+              return;
+            }
+            clearTimeout(timeout);
 
             timeout = setTimeout(function () {
-              editor.storage.set(editor.toJSON());
+              editor.signals.savingStarted.dispatch();
 
-              editor.signals.savingFinished.dispatch();
-            }, 100);
-          }, 1000);
-        }
+              timeout = setTimeout(function () {
+                editor.storage.set(editor.toJSON());
 
-        const signals = editor.signals;
+                editor.signals.savingFinished.dispatch();
+              }, 100);
+            }, 1000);
+          }
 
-        signals.geometryChanged.add(saveState);
-        signals.objectAdded.add(saveState);
-        signals.objectAdded.add(() => {
-          console.log("Test handler");
-        });
-        signals.objectChanged.add(saveState);
-        signals.objectRemoved.add(saveState);
-        signals.materialChanged.add(saveState);
-        signals.sceneBackgroundChanged.add(saveState);
-        signals.sceneEnvironmentChanged.add(saveState);
-        signals.sceneFogChanged.add(saveState);
-        signals.sceneGraphChanged.add(saveState);
-        signals.scriptChanged.add(saveState);
-        signals.historyChanged.add(saveState);
-      });
+          const signals = editor.signals;
 
-      //
-
-      document.addEventListener("dragover", function (event) {
-        event.preventDefault();
-        event.dataTransfer.dropEffect = "copy";
-      });
-
-      document.addEventListener("drop", function (event) {
-        event.preventDefault();
-
-        if (event.dataTransfer.types[0] === "text/plain") return; // Outliner drop
-
-        if (event.dataTransfer.items) {
-          // DataTransferItemList supports folders
-
-          editor.loader.loadItemList(event.dataTransfer.items);
-        } else {
-          editor.loader.loadFiles(event.dataTransfer.files);
-        }
-      });
-
-      function onWindowResize() {
-        editor.signals.windowResize.dispatch();
-      }
-
-      window.addEventListener("resize", onWindowResize);
-
-      onWindowResize();
-
-      //
-
-      let isLoadingFromHash = false;
-      const hash = window.location.hash;
-
-      if (hash.slice(1, 6) === "file=") {
-        const file = hash.slice(6);
-
-        if (confirm("Any unsaved data will be lost. Are you sure?")) {
-          const loader = new THREE.FileLoader();
-          loader.crossOrigin = "";
-          loader.load(file, function (text) {
-            editor.clear();
-            editor.fromJSON(JSON.parse(text));
+          signals.geometryChanged.add(saveState);
+          signals.objectAdded.add(saveState);
+          signals.objectAdded.add(() => {
+            console.log("Test handler");
           });
+          signals.objectChanged.add(saveState);
+          signals.objectRemoved.add(saveState);
+          signals.materialChanged.add(saveState);
+          signals.sceneBackgroundChanged.add(saveState);
+          signals.sceneEnvironmentChanged.add(saveState);
+          signals.sceneFogChanged.add(saveState);
+          signals.sceneGraphChanged.add(saveState);
+          signals.scriptChanged.add(saveState);
+          signals.historyChanged.add(saveState);
+        });
 
-          isLoadingFromHash = true;
+        //
+
+        document.addEventListener("dragover", function (event) {
+          event.preventDefault();
+          event.dataTransfer.dropEffect = "copy";
+        });
+
+        document.addEventListener("drop", function (event) {
+          event.preventDefault();
+
+          if (event.dataTransfer.types[0] === "text/plain") return; // Outliner drop
+
+          if (event.dataTransfer.items) {
+            // DataTransferItemList supports folders
+
+            editor.loader.loadItemList(event.dataTransfer.items);
+          } else {
+            editor.loader.loadFiles(event.dataTransfer.files);
+          }
+        });
+
+        function onWindowResize() {
+          editor.signals.windowResize.dispatch();
         }
-      }
 
-      // ServiceWorker
+        window.addEventListener("resize", onWindowResize);
 
-      if ("serviceWorker" in navigator) {
-        try {
-          navigator.serviceWorker.register("sw.js");
-        } catch (error) {}
+        onWindowResize();
+
+        //
+
+        let isLoadingFromHash = false;
+        const hash = window.location.hash;
+
+        if (hash.slice(1, 6) === "file=") {
+          const file = hash.slice(6);
+
+          if (confirm("Any unsaved data will be lost. Are you sure?")) {
+            const loader = new THREE.FileLoader();
+            loader.crossOrigin = "";
+            loader.load(file, function (text) {
+              editor.clear();
+              editor.fromJSON(JSON.parse(text));
+            });
+
+            isLoadingFromHash = true;
+          }
+        }
+
+        // ServiceWorker
+
+        if ("serviceWorker" in navigator) {
+          try {
+            navigator.serviceWorker.register("sw.js");
+          } catch (error) {}
+        }
       }
     </script>
+
+    <div id="loading" class="centered-div">
+      <img
+        src="https://media.tenor.com/wpSo-8CrXqUAAAAi/loading-loading-forever.gif"
+      />
+    </div>
   </body>
 </html>
