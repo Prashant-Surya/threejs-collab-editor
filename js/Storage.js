@@ -1,10 +1,10 @@
 function StorageIndexDB() {
-  //   const indexedDB = undefined;
-  const indexedDB =
-    window.indexedDB ||
-    window.mozIndexedDB ||
-    window.webkitIndexedDB ||
-    window.msIndexedDB;
+  const indexedDB = undefined;
+  //   const indexedDB =
+  //     window.indexedDB ||
+  //     window.mozIndexedDB ||
+  //     window.webkitIndexedDB ||
+  //     window.msIndexedDB;
 
   if (indexedDB === undefined) {
     console.warn("Storage: IndexedDB not available.");
@@ -15,12 +15,8 @@ function StorageIndexDB() {
       get: function (callback) {
         callback();
       },
-      set: function (callback) {
-        callback();
-      },
-      clear: function (callback) {
-        callback();
-      },
+      set: function () {},
+      clear: function () {},
     };
   }
 

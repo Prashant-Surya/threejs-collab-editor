@@ -95,6 +95,8 @@
       import { VRButton } from "three/addons/webxr/VRButton.js";
       import { UpdateEditorFromEvents } from "./js/RealtimeOps.js";
 
+      let isLoadingFromHash = false;
+
       setTimeout(() => {
         // Giving timeout for all libraries to load properly
         load();
@@ -199,6 +201,7 @@
           let timeout;
 
           function saveState(params) {
+            console.log("Save state params", params);
             if (params?.type === "AddObjectCommand") {
               window.realtimeChannel.publish("data_change", {
                 operation: params.type,
@@ -208,7 +211,19 @@
               window.realtimeChannel.publish("data_change", {
                 operation: params.type,
                 objectId: params.object.uuid,
-                newPosition: params.newPosition,
+                newValue: params.newPosition,
+              });
+            } else if (params?.type === "SetRotationCommand") {
+              window.realtimeChannel.publish("data_change", {
+                operation: params.type,
+                objectId: params.object.uuid,
+                newValue: params.newRotation,
+              });
+            } else if (params?.type === "SetScaleCommand") {
+              window.realtimeChannel.publish("data_change", {
+                operation: params.type,
+                objectId: params.object.uuid,
+                newValue: params.newScale,
               });
             }
 
@@ -277,7 +292,6 @@
 
         //
 
-        let isLoadingFromHash = false;
         const hash = window.location.hash;
 
         if (hash.slice(1, 6) === "file=") {

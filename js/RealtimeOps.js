@@ -1,13 +1,17 @@
-import { AddObjectCommand } from "./commands/AddObjectCommand.js";
-
 function UpdateEditorFromEvents(editor, eventData) {
   const operation = eventData.operation;
   const json = editor.toJSON();
   let updatedJson = null;
   if (operation === "AddObjectCommand") {
     updatedJson = handleAddObject(json, eventData.object);
-  } else if (operation === "SetPositionCommand") {
-    updatedJson = handlePositionChange(editor, eventData);
+  } else if (
+    ["SetPositionCommand", "SetRotationCommand", "SetScaleCommand"].includes(
+      operation
+    )
+  ) {
+    updatedJson = objectPropertyChange(editor, eventData);
+  } else {
+    return;
   }
   editor.clear();
   editor.fromJSON(updatedJson);
@@ -37,10 +41,19 @@ function handleAddObject(currJson, updatedObject) {
   return currJson;
 }
 
-function handlePositionChange(editor, eventData) {
-  const { objectId, newPosition } = eventData;
+function objectPropertyChange(editor, eventData) {
+  const { objectId, newValue, operation } = eventData;
   const modifiedObject = editor.objectByUuid(objectId);
-  modifiedObject.position.copy(newPosition);
+  if (!modifiedObject) {
+    return;
+  }
+  if (operation === "SetPositionCommand") {
+    modifiedObject.position.copy(newValue);
+  } else if (operation === "SetRotationCommand") {
+    modifiedObject.rotation.copy(newValue);
+  } else if (operation === "SetScaleCommand") {
+    modifiedObject.scale.copy(newValue);
+  }
   modifiedObject.updateMatrixWorld(true);
   return editor.toJSON();
 }
