@@ -3,7 +3,7 @@ import { Realtime } from "ably";
 import { nanoid } from "nanoid";
 import queryString from "query-string";
 
-import { getMemberName } from "./utils";
+import { getCursorColor, getMemberName } from "./utils";
 
 console.log(location.search);
 
@@ -30,6 +30,7 @@ const currentSpace = await spaces.get(spaceName);
 
 await currentSpace.enter({
   userName: getMemberName(),
+  cursorColor: getCursorColor(),
 });
 
 const currentUser = await currentSpace.members.getSelf();
@@ -38,5 +39,6 @@ window.currentSpace = currentSpace;
 window.spacesClient = spaces;
 window.realtimeChannel = channel;
 window.currentUser = currentUser;
+window.clientMap = {};
 
 console.log("Main loading complete");
