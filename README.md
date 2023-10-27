@@ -1,1 +1,1 @@
-### Collaboratie Three JS Editor
+### Collaborative Three JS Editor
