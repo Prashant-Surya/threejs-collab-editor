@@ -16,7 +16,7 @@ if (parsed["spaceName"] == null) {
 }
 
 const client = new Realtime.Promise({
-  key: "8CzhaQ.r2TPUw:08QKep0fif06gAgLznl4RP8RlhQsf_zq6HOeXK6vsP8",
+  key: "<ABLY_KEY>",
   clientId: nanoid(),
 });
 
